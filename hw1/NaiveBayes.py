@@ -1,3 +1,9 @@
+'''
+Naive Bayes Model
+10-701 Fall 2020 Homework 1 Programming Exercise
+Author: Elvis Pan <ypan2@andrew.cmu.edu>
+'''
+
 import math
 import matplotlib.pyplot as plt
 
@@ -170,31 +176,33 @@ if __name__ == "__main__":
     NB = NaiveBayes(dicts, disc)  # new Naive Bayes classifier
     NB.fit(train_data)
 
-    print("Prior probability of each class.")  # the prior, answer to 5.1.1
+    print("Prior probability of each class.")  # the prior, 5.1.1
     print("<=50K:", NB.prior[0])
     print(">50K:", NB.prior[1])
 
-    print("\nClass >50K:")  # parameter for class >50K
+    print("\nClass >50K:")  # parameter for class >50K, 5.1.2(a)
     print("education-num:", NB.params[1][4])
     print("martial-status:", NB.params[1][5])
     print("race:", NB.params[1][8])
     print("capital-gain:", NB.params[1][10])
 
-    print("\nClass <=50K:")  # parameter for class <=50K
+    print("\nClass <=50K:")  # parameter for class <=50K, 5.1.2(b)
     print("education-num:", NB.params[0][4])
     print("martial-status:", NB.params[0][5])
     print("race:", NB.params[0][8])
     print("capital-gain:", NB.params[0][10])
 
-    # Report the log-posterior values for the first 10 test data
+    # Report the log-posterior values for the first 10 test data, 5.1.3
     print("\nLog-posterior values for the first 10 test data")
     print([NB.log_posterior(test_data[i], test_data[i][-1]) for i in range(10)])
-
+    
+    # Report the training accuracy and testing accuracy of model, 5.2.1/2
     NB.predict(train_data)
     print("Train accuracy: ", NB.accuracy)
     NB.predict(test_data)
     print("\nTest accuracy: ", NB.accuracy)
 
+    # Reeport the accuracy of training with first n data, 5.2.3
     train_acc = []
     test_acc = []
     print("\nAccuracy on training n data")
