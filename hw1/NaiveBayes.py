@@ -1,11 +1,12 @@
 import math
+import matplotlib.pyplot as plt
 
 _EPSILON = 1e-9  # small value to ensure the variance is not 0
 
 
 def read_attribute(filename):
-    dictionaries = []
-    discrete = []
+    dicts = []
+    disc = []
     with open(filename, 'r') as file:
         for line in file.readlines():
             if "continuous" not in line:
@@ -13,25 +14,22 @@ def read_attribute(filename):
                 d = dict()
                 for i in range(len(a)):
                     d[a[i]] = i
-                dictionaries.append(d)
-                discrete.append(True)
+                dicts.append(d)
+                disc.append(True)
             else:
-                dictionaries.append(None)
-                discrete.append(False)
+                dicts.append(None)
+                disc.append(False)
         file.close()
-    return dictionaries, discrete
+    return dicts, disc
 
 
-def transform_data(data, dictionaries, discrete):
+def transform_data(data, dicts, disc):
     for line in data:
         for i in range(len(line)):
-            if discrete[i]:
-                line[i] = dictionaries[i][line[i]]
+            if disc[i]:
+                line[i] = dicts[i][line[i]]
             else:
-                try:
-                    line[i] = int(line[i])
-                except:
-                    pass
+                line[i] = int(line[i])
     return data
 
 
@@ -40,7 +38,9 @@ def read_data(filename):
     with open(filename, 'r') as file:
         for line in file.readlines():
             if "?" not in line:  # incomplete data
-                data.append(line.strip("\n").strip(".").split(", "))
+                l = line.strip("\n").strip(".").split(", ")
+                if len(l) == 15:
+                    data.append(l)
         file.close()
     return data
 
@@ -61,6 +61,7 @@ def gaussian_pdf(x, mean, var):
     e = math.exp(-(math.pow(x - mean, 2)) / (2 * (var + _EPSILON)))
     return (1 / (math.sqrt(2 * math.pi * (var + _EPSILON)))) * e
 
+
 def compare(x, y):
     assert len(x) == len(y)
     res = 0
@@ -70,18 +71,22 @@ def compare(x, y):
     return res / len(x)
 
 
+def plot_result(x, y):
+    pass
+
+
 class NaiveBayes(object):
-    def __init__(self, dictionaries, discrete):
-        self.dictionaries = dictionaries
-        self.discrete = discrete
+    def __init__(self, dicts, disc):
+        self.dicts = dicts
+        self.disc = disc
         self.params = [[], []]  # self.params[c][i][j]
         self.prior = [0, 0]
         self.result = []
         self.accuracy = 0
-        for i in range(len(dictionaries) - 1):
-            if self.discrete[i]:  # discrete attribute, categorical distribution
-                theta_0 = [0 for i in range(len(dictionaries[i]))]
-                theta_1 = [0 for i in range(len(dictionaries[i]))]
+        for i in range(len(dicts) - 1):
+            if self.disc[i]:  # discrete attribute, categorical distribution
+                theta_0 = [0 for i in range(len(dicts[i]))]
+                theta_1 = [0 for i in range(len(dicts[i]))]
                 self.params[0].append(theta_0)
                 self.params[1].append(theta_1)
             else:  # continuous attribute, mean and variance
@@ -95,9 +100,9 @@ class NaiveBayes(object):
         for cat in [0, 1]:
             for i in range(len(dictionaries) - 1):
                 values = [line[i] for line in data_cat[cat]]
-                if self.discrete[i]:
+                if self.disc[i]:
                     length = len(data_cat[cat])
-                    for (key, value) in self.dictionaries[i].items():
+                    for (key, value) in self.dicts[i].items():
                         num_valid = len([line for line in data_cat[cat] if line[i] == value])
                         self.params[cat][i][value] = num_valid / length
                 else:
@@ -147,4 +152,8 @@ if __name__ == "__main__":
     print("Accuracy of test data: ", NB.accuracy)
     NB.predict(train_data)
     print("Accuracy of train data: ", NB.accuracy)
-    print("Finished")
+
+    # Report the log-posterior values for the first 10 test data
+    # for i in range(10):
+    #    print(NB.log_posterior(test_data[i], test_data[i][-1]))
+
