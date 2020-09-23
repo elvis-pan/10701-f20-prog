@@ -169,7 +169,6 @@ if __name__ == "__main__":
     dicts, disc = read_attribute("attribute.data")
     train_data = read_data("adult.data")
     test_data = read_data("adult.test")
-    del test_data[0]
     train_data = transform_data(train_data, dicts, disc)
     test_data = transform_data(test_data, dicts, disc)
 
