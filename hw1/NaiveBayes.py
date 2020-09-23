@@ -58,8 +58,16 @@ def list_std(x, mean):
 
 
 def gaussian_pdf(x, mean, std):
-    e = math.exp(-(math.pow(x - mean, 2)) / (2 * (math.pow(std) + _EPSILON)))
-    return (1 / (math.sqrt(2 * math.pi * (pow(std) + _EPSILON)))) * e
+    e = math.exp(-(math.pow(x - mean, 2)) / (2 * (math.pow(std, 2) + _EPSILON)))
+    return (1 / (math.sqrt(2 * math.pi * (math.pow(std, 2) + _EPSILON)))) * e
+
+def compare(x, y):
+    assert len(x) == len(y)
+    res = 0
+    for i in range(len(x)):
+        if x[i] == y[i]:
+            res += 1
+    return res / len(x)
 
 
 class NaiveBayes(object):
@@ -68,6 +76,8 @@ class NaiveBayes(object):
         self.discrete = discrete
         self.params = [[], []]  # self.params[c][i][j]
         self.prior = [0, 0]
+        self.result = []
+        self.accuracy = 0
         for i in range(len(dictionaries) - 1):
             if self.discrete[i]:  # discrete attribute, categorical distribution
                 theta_0 = [0 for i in range(len(dictionaries[i]))]
@@ -97,23 +107,30 @@ class NaiveBayes(object):
 
     def p(self, cat, attribute_id, value):
         if discrete[attribute_id]:
-            return self.params[cat][attribute_id][dictionaries[attribute_id][value]]
+            return self.params[cat][attribute_id][value]
         else:
             (mean, std) = self.params[cat][attribute_id]
             return gaussian_pdf(value, mean, std)
 
-    def get_log_posterior(self, line):
-        cat = line[-1]
+    def log_posterior(self, line, cat):
         res = math.log(self.prior[cat])
         for i in range(len(line) - 1):
-            res += math.log(self.p(cat, i, line[i]))
+            prob = self.p(cat, i, line[i])
+            if prob == 0.0:
+                return -float('inf')
+            res += math.log(prob)
         return res
 
     def predict(self, data):
+        result = []
+        answer = [line[-1] for line in data]
         for line in data:
-            for c in [0, 1]:
-                pass
-        pass
+            lp_0 = self.log_posterior(line, 0)
+            lp_1 = self.log_posterior(line, 1)
+            result.append(1 if lp_0 < lp_1 else 0)
+        self.result = result
+        self.accuracy = compare(result, answer)
+        return result
 
 
 if __name__ == "__main__":
@@ -126,3 +143,6 @@ if __name__ == "__main__":
     NB = NaiveBayes(dictionaries, discrete)
     NB.fit(train_data)
     print(NB.prior)
+    NB.predict(test_data)
+    print(NB.accuracy)
+    print("finished")
