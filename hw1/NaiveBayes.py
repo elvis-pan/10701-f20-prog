@@ -57,9 +57,9 @@ def list_std(x, mean):
     return math.sqrt(list_variance(x, mean))
 
 
-def gaussian_pdf(x, mean, std):
-    e = math.exp(-(math.pow(x - mean, 2)) / (2 * (math.pow(std, 2) + _EPSILON)))
-    return (1 / (math.sqrt(2 * math.pi * (math.pow(std, 2) + _EPSILON)))) * e
+def gaussian_pdf(x, mean, var):
+    e = math.exp(-(math.pow(x - mean, 2)) / (2 * (var + _EPSILON)))
+    return (1 / (math.sqrt(2 * math.pi * (var + _EPSILON)))) * e
 
 def compare(x, y):
     assert len(x) == len(y)
@@ -84,7 +84,7 @@ class NaiveBayes(object):
                 theta_1 = [0 for i in range(len(dictionaries[i]))]
                 self.params[0].append(theta_0)
                 self.params[1].append(theta_1)
-            else:  # continuous attribute, mean and std
+            else:  # continuous attribute, mean and variance
                 self.params[0].append((0, 0))
                 self.params[1].append((0, 0))
 
@@ -102,15 +102,15 @@ class NaiveBayes(object):
                         self.params[cat][i][value] = num_valid / length
                 else:
                     mean = list_mean(values)
-                    std = list_std(values, mean)
-                    self.params[cat][i] = (mean, std)
+                    var = list_variance(values, mean)
+                    self.params[cat][i] = (mean, var)
 
     def p(self, cat, attribute_id, value):
         if discrete[attribute_id]:
             return self.params[cat][attribute_id][value]
         else:
-            (mean, std) = self.params[cat][attribute_id]
-            return gaussian_pdf(value, mean, std)
+            (mean, var) = self.params[cat][attribute_id]
+            return gaussian_pdf(value, mean, var)
 
     def log_posterior(self, line, cat):
         res = math.log(self.prior[cat])
@@ -144,5 +144,7 @@ if __name__ == "__main__":
     NB.fit(train_data)
     print(NB.prior)
     NB.predict(test_data)
-    print(NB.accuracy)
-    print("finished")
+    print("Accuracy of test data: ", NB.accuracy)
+    NB.predict(train_data)
+    print("Accuracy of train data: ", NB.accuracy)
+    print("Finished")
