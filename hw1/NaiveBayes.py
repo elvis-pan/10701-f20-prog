@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 _EPSILON = 1e-9  # small value to ensure the variance is not 0
 
 
-def read_attribute(filename):
-    dicts = []
-    disc = []
+def read_attribute(filename):  # read the attributes
+    dicts = []  # dictionaries to convert discrete values to integers
+    disc = []  # disc[i] = whether the ith attribute is discrete
     with open(filename, 'r') as file:
         for line in file.readlines():
             if "continuous" not in line:
@@ -23,25 +23,39 @@ def read_attribute(filename):
     return dicts, disc
 
 
-def transform_data(data, dicts, disc):
-    for line in data:
-        for i in range(len(line)):
-            if disc[i]:
-                line[i] = dicts[i][line[i]]
-            else:
-                line[i] = int(line[i])
-    return data
-
-
 def read_data(filename):
     data = []
     with open(filename, 'r') as file:
         for line in file.readlines():
             if "?" not in line:  # incomplete data
                 l = line.strip("\n").strip(".").split(", ")
-                if len(l) == 15:
+                if len(l) == 15: # filter out empty data
                     data.append(l)
         file.close()
+    return data
+
+
+def read_data_n(filename, n):
+    data = []
+    with open(filename, 'r') as file:
+        lines = file.readlines();
+        for i in range(n):
+            if "?" not in lines[i]:  # incomplete data
+                l = lines[i].strip("\n").strip(".").split(", ")
+                if len(l) == 15: # filter out empty data
+                    data.append(l)
+        file.close()
+    return data
+
+
+
+def transform_data(data, dicts, disc):
+    for line in data:
+        for i in range(len(line)):
+            if disc[i]:  # discrete, transform to value in dict
+                line[i] = dicts[i][line[i]]
+            else:  # continuous, change type to int
+                line[i] = int(line[i])
     return data
 
 
@@ -62,7 +76,7 @@ def gaussian_pdf(x, mean, var):
     return (1 / (math.sqrt(2 * math.pi * (var + _EPSILON)))) * e
 
 
-def compare(x, y):
+def diff(x, y):
     assert len(x) == len(y)
     res = 0
     for i in range(len(x)):
@@ -71,8 +85,14 @@ def compare(x, y):
     return res / len(x)
 
 
-def plot_result(x, y):
-    pass
+def plot_result(ns, train_acc, test_acc):
+    plt.figure()
+    plt.plot(ns, train_acc, label="Train accuracy")
+    plt.plot(ns, test_acc, label="Test accuracy")
+    plt.xlabel("Exponent of number of data points selected")
+    plt.ylabel("Test accuracy")
+    plt.legend()
+    plt.savefig("result.png")
 
 
 class NaiveBayes(object):
@@ -98,7 +118,7 @@ class NaiveBayes(object):
                     [line for line in data if line[-1] == 1]]
         self.prior = [len(data_cat[0]) / len(data), len(data_cat[1]) / len(data)]
         for cat in [0, 1]:
-            for i in range(len(dictionaries) - 1):
+            for i in range(len(self.dicts) - 1):
                 values = [line[i] for line in data_cat[cat]]
                 if self.disc[i]:
                     length = len(data_cat[cat])
@@ -111,7 +131,7 @@ class NaiveBayes(object):
                     self.params[cat][i] = (mean, var)
 
     def p(self, cat, attribute_id, value):
-        if discrete[attribute_id]:
+        if self.disc[attribute_id]:
             return self.params[cat][attribute_id][value]
         else:
             (mean, var) = self.params[cat][attribute_id]
@@ -132,28 +152,60 @@ class NaiveBayes(object):
         for line in data:
             lp_0 = self.log_posterior(line, 0)
             lp_1 = self.log_posterior(line, 1)
-            result.append(1 if lp_0 < lp_1 else 0)
+            result.append(0 if lp_0 > lp_1 else 1)
         self.result = result
-        self.accuracy = compare(result, answer)
+        self.accuracy = diff(result, answer)
         return result
 
 
 if __name__ == "__main__":
-    dictionaries, discrete = read_attribute("attribute.data")
+    dicts, disc = read_attribute("attribute.data")
     train_data = read_data("adult.data")
     test_data = read_data("adult.test")
     del test_data[0]
-    train_data = transform_data(train_data, dictionaries, discrete)
-    test_data = transform_data(test_data, dictionaries, discrete)
-    NB = NaiveBayes(dictionaries, discrete)
+    train_data = transform_data(train_data, dicts, disc)
+    test_data = transform_data(test_data, dicts, disc)
+
+    NB = NaiveBayes(dicts, disc)  # new Naive Bayes classifier
     NB.fit(train_data)
-    print(NB.prior)
-    NB.predict(test_data)
-    print("Accuracy of test data: ", NB.accuracy)
-    NB.predict(train_data)
-    print("Accuracy of train data: ", NB.accuracy)
+
+    print("Prior probability of each class.")  # the prior, answer to 5.1.1
+    print("<=50K:", NB.prior[0])
+    print(">50K:", NB.prior[1])
+
+    print("\nClass >50K:")  # parameter for class >50K
+    print("education-num:", NB.params[1][4])
+    print("martial-status:", NB.params[1][5])
+    print("race:", NB.params[1][8])
+    print("capital-gain:", NB.params[1][10])
+
+    print("\nClass <=50K:")  # parameter for class <=50K
+    print("education-num:", NB.params[0][4])
+    print("martial-status:", NB.params[0][5])
+    print("race:", NB.params[0][8])
+    print("capital-gain:", NB.params[0][10])
 
     # Report the log-posterior values for the first 10 test data
-    # for i in range(10):
-    #    print(NB.log_posterior(test_data[i], test_data[i][-1]))
+    print("\nLog-posterior values for the first 10 test data")
+    print([NB.log_posterior(test_data[i], test_data[i][-1]) for i in range(10)])
 
+    NB.predict(train_data)
+    print("Train accuracy: ", NB.accuracy)
+    NB.predict(test_data)
+    print("\nTest accuracy: ", NB.accuracy)
+
+    train_acc = []
+    test_acc = []
+    print("\nAccuracy on training n data")
+    for i in range(5, 14):
+        train_data_n = read_data_n("adult.data", 2 ** i)
+        train_data_n = transform_data(train_data_n, dicts, disc)
+        NB = NaiveBayes(dicts, disc)
+        NB.fit(train_data_n)
+        NB.predict(train_data_n)
+        print("Train accuracy of n={}:".format(2 ** i), NB.accuracy)
+        train_acc.append(NB.accuracy)
+        NB.predict(test_data)
+        print("Test accuracy of n={}:".format(2 ** i), NB.accuracy)
+        test_acc.append(NB.accuracy)
+    plot_result(range(5, 14), train_acc, test_acc)
