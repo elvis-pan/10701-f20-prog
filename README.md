@@ -9,6 +9,7 @@ A Na&iuml;ve Bayes classifier with both discrete and continuous attributes.
 Discrete attributes are modeled by categorical distribution with parameter $\alpha_{i,c,j}$, which shows the probability of the ith attribute being j given label c.
 
 Continuous attributes are modeled by Gaussian distribution with parameter $\mu$ and $\sigma^2$, where the probability is computed using
-$P(x) = \frac{1}{\sqrt{2 \pi (\sigma^2 + \epsilon)}} e^{-\frac{(x-\mu)^2}{2(\sigma^2 + \epsilon)}}$
+
+<img src="https://render.githubusercontent.com/render/math?math=P(x)=\frac{1}{\sqrt{2\pi(\sigma^2 %2B \epsilon)}}e^{-\frac{(x-\mu)^2}{2(\sigma^2 %2B \epsilon)}}.">
 
 Run: `cd hw1` and then `python3 NaiveBayes.py`.
