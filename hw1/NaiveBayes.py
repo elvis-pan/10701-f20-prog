@@ -48,7 +48,6 @@ def read_data_n(filename, n):
     return data
 
 
-
 def transform_data(data, dicts, disc):
     for line in data:
         for i in range(len(line)):
@@ -95,7 +94,7 @@ def plot_result(ns, train_acc, test_acc):
     plt.savefig("result.png")
 
 
-class NaiveBayes(object):
+class NaiveBayes:
     def __init__(self, dicts, disc):
         self.dicts = dicts
         self.disc = disc
@@ -113,34 +112,36 @@ class NaiveBayes(object):
                 self.params[0].append((0, 0))
                 self.params[1].append((0, 0))
 
-    def fit(self, data):
-        data_cat = [[line for line in data if line[-1] == 0],
+    def fit(self, data):  # calculate the best fit parameter using data
+        data_label = [[line for line in data if line[-1] == 0],
                     [line for line in data if line[-1] == 1]]
-        self.prior = [len(data_cat[0]) / len(data), len(data_cat[1]) / len(data)]
-        for cat in [0, 1]:
+        self.prior = [len(data_label[0]) / len(data),
+                      len(data_label[1]) / len(data)]
+        for label in [0, 1]:
             for i in range(len(self.dicts) - 1):
-                values = [line[i] for line in data_cat[cat]]
+                values = [line[i] for line in data_label[label]]
                 if self.disc[i]:
-                    length = len(data_cat[cat])
+                    length = len(data_label[label])
                     for (key, value) in self.dicts[i].items():
-                        num_valid = len([line for line in data_cat[cat] if line[i] == value])
-                        self.params[cat][i][value] = num_valid / length
+                        num_valid = len([line for line in data_label[label]
+                                         if line[i] == value])
+                        self.params[label][i][value] = num_valid / length
                 else:
                     mean = list_mean(values)
                     var = list_variance(values, mean)
-                    self.params[cat][i] = (mean, var)
+                    self.params[label][i] = (mean, var)
 
-    def p(self, cat, attribute_id, value):
-        if self.disc[attribute_id]:
-            return self.params[cat][attribute_id][value]
-        else:
-            (mean, var) = self.params[cat][attribute_id]
+    def p(self, label, attribute_id, value):  # the probability function
+        if self.disc[attribute_id]:  # categorical distribution
+            return self.params[label][attribute_id][value]
+        else:  # gaussian distribution
+            (mean, var) = self.params[label][attribute_id]
             return gaussian_pdf(value, mean, var)
 
-    def log_posterior(self, line, cat):
-        res = math.log(self.prior[cat])
+    def log_posterior(self, line, label):
+        res = math.log(self.prior[label])
         for i in range(len(line) - 1):
-            prob = self.p(cat, i, line[i])
+            prob = self.p(label, i, line[i])
             if prob == 0.0:
                 return -float('inf')
             res += math.log(prob)
