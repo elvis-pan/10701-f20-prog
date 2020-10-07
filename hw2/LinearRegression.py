@@ -46,7 +46,7 @@ class LinearRegression:
         self.eta = learn_rate
         self.w = np.zeros(num_feature, dtype=np.float64)
         self.b = 0.0
-        self.reg_type = reg_type if reg_type is not None else "no"
+        self.reg_type = reg_type
         self.lambda_ = reg
         self.epoch = 1
         self.X = None
@@ -69,12 +69,12 @@ class LinearRegression:
         return np.array(res).T
 
     def reg(self):
-        if self.reg_type == "no":
-            return 0
-        elif self.reg_type == "ridge":
+        if self.reg_type == "Ridge":
             return 2 * self.eta * self.lambda_ * self.w
-        elif self.reg_type == "lasso":
+        elif self.reg_type == "Lasso":
             return self.eta * self.lambda_ * np.sign(self.w)
+        else:
+            return 0
 
     def fit(self, X, y, epoch=1):
         self.epoch = epoch
@@ -95,11 +95,20 @@ class LinearRegression:
 
     def plot_loss(self, path):
         plt.figure()
-        x = [i + 1 for i in range(len(self.loss))]
-        plt.plot(x, self.loss)
+        steps = [i + 1 for i in range(len(self.loss))]
+        plt.plot(steps, self.loss)
         plt.xlabel("Number of steps")
         plt.ylabel("Training loss")
-        plt.title("Error of $\eta$ = {}, {} epochs, {} regularization".format(self.eta, self.epoch, self.reg_type))
+        if self.reg_type == "Ridge":
+            reg_type = "$L_2$"
+        elif self.reg_type == "Lasso":
+            reg_type = "$L_1$"
+        else:
+            reg_type = "no"
+        title = "Training loss: {} epochs, {} regularization, $\eta$ = {}".format(self.epoch, reg_type, self.eta)
+        if self.reg_type is not None:
+            title += ", $\lambda$ = {}".format(self.lambda_)
+        plt.title(title)
         plt.savefig(path)
 
 
@@ -111,16 +120,24 @@ if __name__ == "__main__":
 
     LR = LinearRegression(12, 0.01)
     LR.fit(X_train, y_train, epoch=50)
+    # print(LR.w)
+    print(compute_error(LR.predict(X_test), y_test))
     LR.plot_loss("result/1.png")
 
     LR = LinearRegression(12, 0.001)
     LR.fit(X_train, y_train, epoch=50)
+    # print(LR.w)
+    print(compute_error(LR.predict(X_test), y_test))
     LR.plot_loss("result/2.png")
 
-    LR = LinearRegression(12, 0.001, reg_type="ridge", reg=0.1)
+    LR = LinearRegression(12, 0.001, reg_type="Ridge", reg=0.1)
     LR.fit(X_train, y_train, epoch=50)
+    # print(LR.w)
+    print(compute_error(LR.predict(X_test), y_test))
     LR.plot_loss("result/3.png")
 
-    LR = LinearRegression(12, 0.001, reg_type="lasso", reg=0.1)
+    LR = LinearRegression(12, 0.001, reg_type="Lasso", reg=0.1)
     LR.fit(X_train, y_train, epoch=50)
+    # print(LR.w)
+    print(compute_error(LR.predict(X_test), y_test))
     LR.plot_loss("result/4.png")
