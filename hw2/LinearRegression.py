@@ -71,9 +71,9 @@ class LinearRegression:
     def reg(self):
         if self.reg_type == "no":
             return 0
-        if self.reg_type == "ridge":
+        elif self.reg_type == "ridge":
             return 2 * self.eta * self.lambda_ * self.w
-        if self.reg_type == "lasso":
+        elif self.reg_type == "lasso":
             return self.eta * self.lambda_ * np.sign(self.w)
 
     def fit(self, X, y, epoch=1):
@@ -90,8 +90,8 @@ class LinearRegression:
         return self.w, self.b
 
     def predict(self, X):
-        x_standardized = self.standardize(X)
-        return np.dot(x_standardized, self.w.T) + self.b
+        X_standardized = self.standardize(X)
+        return np.dot(X_standardized, self.w.T) + self.b
 
     def plot_loss(self, path):
         plt.figure()
@@ -111,16 +111,16 @@ if __name__ == "__main__":
 
     LR = LinearRegression(12, 0.01)
     LR.fit(X_train, y_train, epoch=50)
-    LR.plot_loss("result/1.pdf")
+    LR.plot_loss("result/1.png")
 
     LR = LinearRegression(12, 0.001)
     LR.fit(X_train, y_train, epoch=50)
-    LR.plot_loss("result/2.pdf")
+    LR.plot_loss("result/2.png")
 
     LR = LinearRegression(12, 0.001, reg_type="ridge", reg=0.1)
     LR.fit(X_train, y_train, epoch=50)
-    LR.plot_loss("result/3.pdf")
+    LR.plot_loss("result/3.png")
 
     LR = LinearRegression(12, 0.001, reg_type="lasso", reg=0.1)
     LR.fit(X_train, y_train, epoch=50)
-    LR.plot_loss("result/4.pdf")
+    LR.plot_loss("result/4.png")
