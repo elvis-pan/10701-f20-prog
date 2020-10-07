@@ -35,6 +35,10 @@ def split_data(data):
     return np.array(X), np.array(y)
 
 
+def compute_error(y_pred, y):
+    return np.mean(np.power(y_pred - y, 2))
+
+
 class LinearRegression:
     def __init__(self, num_feature, learn_rate, reg_type=None, reg=0):
         self.m = num_feature
@@ -47,6 +51,7 @@ class LinearRegression:
         self.y = None
         self.mean = None
         self.std = None
+        self.error = []
 
     def find_params(self, X):
         self.mean = np.array([np.mean(line) for line in X.T])
@@ -62,7 +67,7 @@ class LinearRegression:
         if self.reg_type is None:
             return 0
         if self.reg_type == "Ridge":
-            return self.lambda_ * np.pow(self.w, 2)
+            return self.lambda_ * np.power(self.w, 2)
         if self.reg_type == "Lasso":
             return self.lambda_ * np.abs(self.w)
 
@@ -75,20 +80,23 @@ class LinearRegression:
                 y_pred = np.dot(self.w, self.X[i]) + self.b
                 self.w = self.w - 2 * self.eta * (y_pred - self.y[i]) * self.X[i] + self.reg()
                 self.b = self.b - 2 * self.eta * (y_pred - self.y[i])
-                print(self.w)
-                print(self.b)
+            self.error.append(compute_error(self.predict(X), y))
         return self.w, self.b
 
     def predict(self, X):
-        return np.dot(X, self.w.T) + self.b
+        X_standardized = self.standardize(X)
+        return np.dot(X_standardized, self.w.T) + self.b
 
 
 if __name__ == "__main__":
     train_data = read_data("carseats_train.csv")
     test_data = read_data("carseats_test.csv")
     X_train, y_train = split_data(train_data)
+    X_test, y_test = split_data(test_data)
 
     LR = LinearRegression(12, 0.01)
-    LR.fit(X_train, y_train)
-    print(LR.w)
-    LR.predict(X_train)
+    LR.fit(X_train, y_train, epoch=50)
+    y_pred_train = LR.predict(X_train)
+
+    y_pred_test = LR.predict(X_test)
+    print(compute_error(y_pred_test, y_test))
