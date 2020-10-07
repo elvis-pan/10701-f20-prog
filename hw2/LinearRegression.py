@@ -1,12 +1,13 @@
 import csv
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def read_data(filename):
     data = []
     with open(filename, "r") as f:
         reader = csv.reader(f)
-        next(reader, None)
+        next(reader, None)  # do not read header
         for line in reader:
             data_line = [float(k) for k in line[:6]]
             if line[6] == 'Good':
@@ -30,13 +31,20 @@ def read_data(filename):
 
 
 def split_data(data):
-    X = [line[1:] for line in data]
-    y = [line[0] for line in data]
-    return np.array(X), np.array(y)
+    X = np.array([line[1:] for line in data])
+    y = np.array([line[0] for line in data])
+    return X, y
 
 
 def compute_error(y_pred, y):
     return np.mean(np.power(y_pred - y, 2))
+
+
+def plot_error(error):
+    plt.figure()
+    x = [i + 1 for i in range(len(error))]
+    plt.plot(x, error)
+    pass
 
 
 class LinearRegression:
@@ -51,7 +59,7 @@ class LinearRegression:
         self.y = None
         self.mean = None
         self.std = None
-        self.error = []
+        self.loss = []
 
     def find_params(self, X):
         self.mean = np.array([np.mean(line) for line in X.T])
@@ -60,7 +68,10 @@ class LinearRegression:
     def standardize(self, X):
         res = []
         for i in range(X.T.shape[0]):
-            res.append((X.T[i] - self.mean[i]) / self.std[i])
+            if i in [5, 6, 7, 10, 11]:
+                res.append(X.T[i])
+            else:
+                res.append((X.T[i] - self.mean[i]) / self.std[i])
         return np.array(res).T
 
     def reg(self):
@@ -80,12 +91,12 @@ class LinearRegression:
                 y_pred = np.dot(self.w, self.X[i]) + self.b
                 self.w = self.w - 2 * self.eta * (y_pred - self.y[i]) * self.X[i] + self.reg()
                 self.b = self.b - 2 * self.eta * (y_pred - self.y[i])
-            self.error.append(compute_error(self.predict(X), y))
+                self.loss.append(compute_error(self.predict(X), y))
         return self.w, self.b
 
     def predict(self, X):
-        X_standardized = self.standardize(X)
-        return np.dot(X_standardized, self.w.T) + self.b
+        x_standardized = self.standardize(X)
+        return np.dot(x_standardized, self.w.T) + self.b
 
 
 if __name__ == "__main__":
@@ -100,3 +111,4 @@ if __name__ == "__main__":
 
     y_pred_test = LR.predict(X_test)
     print(compute_error(y_pred_test, y_test))
+    print(LR.w)
