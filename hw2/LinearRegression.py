@@ -1,3 +1,10 @@
+"""
+10-701 F20 Homework 2
+Linear Regression
+
+Author: Elvis Pan
+Email: ypan2@andrew.cmu.edu
+"""
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,7 +16,7 @@ def split_data(data):
     return X, y
 
 
-def read_data(filename):
+def read_data(filename):  # read the data in the given csv file
     data = []
     with open(filename, "r") as f:
         reader = csv.reader(f)
@@ -17,7 +24,7 @@ def read_data(filename):
         for line in reader:
             data_line = [float(k) for k in line[:6]]
             data_line.extend([float(k) for k in line[7:9]])
-            if line[9] == "Yes":
+            if line[9] == "Yes":  # binary variable
                 data_line.append(1.0)
             else:
                 data_line.append(0.0)
@@ -25,7 +32,7 @@ def read_data(filename):
                 data_line.append(1.0)
             else:
                 data_line.append(0.0)
-            if line[6] == 'Good':
+            if line[6] == 'Good':  # categorical variable
                 data_line.extend((0.0, 1.0, 0.0))
             elif line[6] == 'Medium':
                 data_line.extend((0.0, 0.0, 1.0))
@@ -36,7 +43,7 @@ def read_data(filename):
     return split_data(data)
 
 
-def compute_error(y_pred, y):
+def compute_loss(y_pred, y):  # compute the loss
     return np.mean(np.power(y_pred - y, 2))
 
 
@@ -55,11 +62,11 @@ class LinearRegression:
         self.std = None
         self.loss = []
 
-    def find_params(self, X):
+    def find_params(self, X):  # find the mean and std for standardize and save them
         self.mean = np.array([np.mean(line) for line in X.T])
         self.std = np.array([np.std(line) for line in X.T])
 
-    def standardize(self, X):
+    def standardize(self, X):  # standardize the data using pre-computed mean and std
         res = []
         for i in range(X.T.shape[0]):
             if i >= 7:
@@ -68,7 +75,7 @@ class LinearRegression:
                 res.append((X.T[i] - self.mean[i]) / self.std[i])
         return np.array(res).T
 
-    def reg(self):
+    def reg(self):  # regularization term
         if self.reg_type == "Ridge":
             return 2 * self.eta * self.lambda_ * self.w
         elif self.reg_type == "Lasso":
@@ -76,7 +83,7 @@ class LinearRegression:
         else:
             return 0
 
-    def fit(self, X, y, epoch=1):
+    def fit(self, X, y, epoch=1):  # fit on the given dataset
         self.epoch = epoch
         self.find_params(X)
         self.X = self.standardize(X)
@@ -86,14 +93,14 @@ class LinearRegression:
                 y_pred = np.dot(self.w, self.X[i]) + self.b
                 self.w = self.w - 2 * self.eta * (y_pred - self.y[i]) * self.X[i] - self.reg()
                 self.b = self.b - 2 * self.eta * (y_pred - self.y[i])
-                self.loss.append(compute_error(y_pred, y[i]))
+                self.loss.append(compute_loss(y_pred, y[i]))
         return self.w, self.b
 
-    def predict(self, X):
+    def predict(self, X):  # predict on the given dataset
         X_standardized = self.standardize(X)
         return np.dot(X_standardized, self.w.T) + self.b
 
-    def plot_loss(self, path):
+    def plot_loss(self, path):  # plot the loss in previous fit
         plt.figure()
         steps = [i + 1 for i in range(len(self.loss))]
         plt.plot(steps, self.loss)
@@ -119,23 +126,23 @@ if __name__ == "__main__":
     LR = LinearRegression(12, 0.01)
     LR.fit(X_train, y_train, epoch=50)
     # print(LR.w)
-    print(compute_error(LR.predict(X_test), y_test))
+    print(compute_loss(LR.predict(X_test), y_test))
     LR.plot_loss("result/1.png")
 
     LR = LinearRegression(12, 0.001)
     LR.fit(X_train, y_train, epoch=50)
     # print(LR.w)
-    print(compute_error(LR.predict(X_test), y_test))
+    print(compute_loss(LR.predict(X_test), y_test))
     LR.plot_loss("result/2.png")
 
     LR = LinearRegression(12, 0.001, regularization="Ridge", penalty=0.1)
     LR.fit(X_train, y_train, epoch=50)
     # print(LR.w)
-    print(compute_error(LR.predict(X_test), y_test))
+    print(compute_loss(LR.predict(X_test), y_test))
     LR.plot_loss("result/3.png")
 
     LR = LinearRegression(12, 0.001, regularization="Lasso", penalty=0.1)
     LR.fit(X_train, y_train, epoch=50)
     # print(LR.w)
-    print(compute_error(LR.predict(X_test), y_test))
+    print(compute_loss(LR.predict(X_test), y_test))
     LR.plot_loss("result/4.png")
