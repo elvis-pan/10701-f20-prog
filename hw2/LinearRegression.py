@@ -48,9 +48,9 @@ def compute_loss(y_pred, y):  # compute the loss
 
 
 class LinearRegression:
-    def __init__(self, num_feature, learn_rate, regularization=None, penalty=0):
+    def __init__(self, num_feature, learning_rate, regularization=None, penalty=0):
         self.m = num_feature
-        self.eta = learn_rate
+        self.eta = learning_rate
         self.w = np.zeros(num_feature, dtype=np.float64)
         self.b = 0.0
         self.reg_type = regularization
@@ -125,24 +125,20 @@ if __name__ == "__main__":
 
     LR = LinearRegression(12, 0.01)
     LR.fit(X_train, y_train, epoch=50)
-    # print(LR.w)
     print(compute_loss(LR.predict(X_test), y_test))
     LR.plot_loss("result/1.png")
 
     LR = LinearRegression(12, 0.001)
     LR.fit(X_train, y_train, epoch=50)
-    # print(LR.w)
     print(compute_loss(LR.predict(X_test), y_test))
     LR.plot_loss("result/2.png")
 
     LR = LinearRegression(12, 0.001, regularization="Ridge", penalty=0.1)
     LR.fit(X_train, y_train, epoch=50)
-    # print(LR.w)
     print(compute_loss(LR.predict(X_test), y_test))
     LR.plot_loss("result/3.png")
 
     LR = LinearRegression(12, 0.001, regularization="Lasso", penalty=0.1)
     LR.fit(X_train, y_train, epoch=50)
-    # print(LR.w)
     print(compute_loss(LR.predict(X_test), y_test))
     LR.plot_loss("result/4.png")
