@@ -60,9 +60,12 @@ class ANN:
         return 1 / (1 + np.exp(-x))
 
     @staticmethod
-    def softmax_xeloss(x, labels):
-        pred = np.exp(x - _EXP) / np.sum(np.exp(x - _EXP))
-        return pred, (-np.sum(labels * np.log(pred)))
+    def softmax(x):
+        return np.exp(x - _EXP) / np.sum(np.exp(x - _EXP))
+
+    @staticmethod
+    def xeloss(pred, labels):
+        return -np.sum(labels * np.log(pred))
 
     def forward(self, x, y):
         self.x = x.reshape((self.M, 1))
@@ -70,13 +73,14 @@ class ANN:
         self.a = self.alpha_bias + np.matmul(self.alpha, self.x)
         self.z = self.sigmoid(self.a)
         self.b = self.beta_bias + np.matmul(self.beta, self.z)
-        self.y_pred, self.loss = self.softmax_xeloss(self.b, self.y)
+        self.y_pred = self.softmax(self.b)
+        self.loss = self.xeloss(self.y_pred, self.y)
 
     def backward(self):
         b_grad = self.y_pred - self.y
         beta_grad = np.matmul(b_grad, self.z.T)
         z_grad = np.matmul(self.beta.T, b_grad)
-        a_grad = z_grad * self.sigmoid(self.z) * (1 - self.sigmoid(self.z))
+        a_grad = z_grad * self.z * (1 - self.z)
         alpha_grad = np.matmul(a_grad, self.x.T)
         self.beta -= self.learning_rate * beta_grad
         self.beta_bias -= self.learning_rate * b_grad
@@ -95,8 +99,14 @@ class ANN:
                 loss_total += self.loss
             print(loss_total / len(train_x))
 
-    def predict(self, x):
-        pass
+    def predict(self, test_x):
+        res = []
+        for x in test_x:
+            a = self.alpha_bias + np.matmul(self.alpha, x)
+            z = self.sigmoid(a)
+            b = self.beta_bias + np.matmul(self.beta, z)
+            y_pred = self.softmax(b)
+            res.append(y_pred)
 
 
 if __name__ == "__main__":
