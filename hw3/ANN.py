@@ -43,7 +43,7 @@ def save_model(Model, filename):
 
 
 class ANN:
-    def __init__(self, input_dim, hidden_dim, output_dim, learning_rate=0.01):
+    def __init__(self, input_dim, hidden_dim, output_dim, learning_rate=0.01, regularization=0):
         self.M = input_dim
         self.D = hidden_dim
         self.K = output_dim
@@ -55,10 +55,11 @@ class ANN:
         self.y_pred = None
         self.loss = 0
         self.alpha = np.random.rand(self.D, self.M)
-        self.alpha_bias = np.random.rand(self.D)
+        self.alpha_bias = np.ones((self.D, 1))
         self.beta = np.random.rand(self.K, self.D)
-        self.beta_bias = np.random.rand(self.K)
+        self.beta_bias = np.ones((self.K, 1))
         self.learning_rate = learning_rate
+        self.reg = regularization
 
     @staticmethod
     def sigmoid(x):
@@ -68,9 +69,8 @@ class ANN:
     def softmax(x):
         return np.exp(x - _EXP) / np.sum(np.exp(x - _EXP))
 
-    @staticmethod
-    def xeloss(pred, labels):
-        return -np.sum(labels * np.log(pred))
+    def xeloss(self, pred, labels):
+        return -np.sum(labels * np.log(pred)) + self.reg * (np.sum(self.alpha ** 2) + np.sum(self.beta ** 2))
 
     def forward(self, x, y):
         self.x = x.reshape((self.M, 1))
@@ -83,10 +83,10 @@ class ANN:
 
     def backward(self):
         b_grad = self.y_pred - self.y
-        beta_grad = np.matmul(b_grad, self.z.T)
+        beta_grad = np.matmul(b_grad, self.z.T) + 2 * self.reg * self.beta
         z_grad = np.matmul(self.beta.T, b_grad)
         a_grad = z_grad * self.z * (1 - self.z)
-        alpha_grad = np.matmul(a_grad, self.x.T)
+        alpha_grad = np.matmul(a_grad, self.x.T) + 2 * self.reg * self.alpha
         self.beta -= self.learning_rate * beta_grad
         self.beta_bias -= self.learning_rate * b_grad
         self.alpha -= self.learning_rate * alpha_grad
@@ -138,8 +138,8 @@ if __name__ == "__main__":
     Model.fit(train_x, train_y, epoch=100)
     train_y_pred = Model.predict(train_x)
     print("Training finished " + str(time.time() - start_time))
-    save_model(Model, "model.pkl")
+    # save_model(Model, "model.pkl")
     print(Model.compare(train_y, train_y_pred))
     test_y_pred = Model.predict(test_x)
     print(Model.compare(test_y, test_y_pred))
-    print("Finished" + str(time.time() - start_time))
+    print("Finished " + str(time.time() - start_time))
