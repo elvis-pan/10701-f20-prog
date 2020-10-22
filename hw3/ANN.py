@@ -54,6 +54,9 @@ class ANN:
         self.y = None
         self.y_pred = None
         self.loss = 0
+        self.loss_list = []
+        self.accuracy = 0
+        self.accuracy_list = []
         self.alpha = np.random.rand(self.D, self.M)
         self.alpha_bias = np.ones((self.D, 1))
         self.beta = np.random.rand(self.K, self.D)
@@ -71,6 +74,9 @@ class ANN:
 
     def xeloss(self, pred, labels):
         return -np.sum(labels * np.log(pred)) + self.reg * (np.sum(self.alpha ** 2) + np.sum(self.beta ** 2))
+
+    def xeloss_mult(self, pred, labels):
+        return -np.sum(labels * np.log(pred)) / len(pred)
 
     def forward(self, x, y):
         self.x = x.reshape((self.M, 1))
@@ -92,17 +98,16 @@ class ANN:
         self.alpha -= self.learning_rate * alpha_grad
         self.alpha_bias -= self.learning_rate * a_grad
 
-    # @jit(target="cuda")
     def fit(self, train_x, train_y, epoch=1):
         for e in range(epoch):
-            loss_total = 0
             for i in range(len(train_x)):
                 x = train_x[i]
                 y = train_y[i]
                 self.forward(x, y)
                 self.backward()
-                loss_total += self.loss
-            print(loss_total / len(train_x))
+            self.accuracy = self.compare(train_y, self.predict(train_x))
+            self.accuracy_list.append(self.accuracy)
+            self.loss_list.append(self.xeloss_mult(self.predict(train_x), train_y))
 
     def predict(self, test_x):
         res = []
@@ -125,21 +130,76 @@ class ANN:
                 cnt += 1
         return cnt / len(y)
 
+    def plot_loss(self, epoch, train_x, train_y, test_x, test_y, filename):
+        train_loss = []
+        test_loss = []
+        train_accuracy = []
+        test_accuracy = []
+        for e in range(epoch):
+            loss_total = 0
+            for i in range(len(train_x)):
+                x = train_x[i]
+                y = train_y[i]
+                self.forward(x, y)
+                self.backward()
+                loss_total += self.loss
+            train_pred = self.predict(train_x)
+            test_pred = self.predict(test_x)
+            train_loss.append(self.xeloss_mult(train_pred, train_y))
+            test_loss.append(self.xeloss_mult(test_pred, test_y))
+            train_accuracy.append(self.compare(train_y, train_pred))
+            test_accuracy.append(self.compare(test_y, test_pred))
+            print("Epoch {} finished".format(e + 1))
+        plt.figure()
+        plt.plot([i + 1 for i in range(epoch)], train_loss, label="Training Loss")
+        plt.plot([i + 1 for i in range(epoch)], test_loss, label="Test Loss")
+        plt.legend()
+        plt.xlabel("Number of Epoch")
+        plt.ylabel("Average Loss")
+        plt.title("Average Training Loss vs Test Loss")
+        plt.savefig(filename)
+        return train_loss, test_loss, train_accuracy, test_accuracy
+
 
 if __name__ == "__main__":
+    # Load dataset
     train_x, train_y = read_data("data/train.csv")
     test_x, test_y = read_data("data/test.csv")
-    Model = ANN(784, 256, 10, learning_rate=0.01)
-    Model.alpha = read_params("params/alpha1.txt")
-    Model.alpha_bias = read_params("params/beta1.txt")
-    Model.beta = read_params("params/alpha2.txt")
-    Model.beta_bias = read_params("params/beta2.txt")
-    start_time = time.time()
-    Model.fit(train_x, train_y, epoch=100)
-    train_y_pred = Model.predict(train_x)
-    print("Training finished " + str(time.time() - start_time))
-    # save_model(Model, "model.pkl")
-    print(Model.compare(train_y, train_y_pred))
-    test_y_pred = Model.predict(test_x)
-    print(Model.compare(test_y, test_y_pred))
-    print("Finished " + str(time.time() - start_time))
+
+
+    def new_model():
+        # Initialize model
+        Model = ANN(784, 256, 10, learning_rate=0.01)
+
+        # M = ANN(M.M, M.D, M.K, learning_rate=M.learning_rate)
+        Model.alpha = read_params("params/alpha1.txt")
+        Model.alpha_bias = read_params("params/beta1.txt")
+        Model.beta = read_params("params/alpha2.txt")
+        Model.beta_bias = read_params("params/beta2.txt")
+        return Model
+
+
+    """
+    Model = new_model()
+    Model.fit([train_x[0]], [train_y[0]], epoch=1)
+    print(Model.a[9])  # Q5.1, zero indexed so a[9] = a_{10}
+    print(Model.z[19])  # Q5,2, zero indexed so z[19] = z_{20}
+    print(Model.y_pred)  # Q5.3
+    print("1 epoch finished")
+
+    Model = new_model()
+    Model.fit(train_x, train_y, epoch=3)
+    print(Model.beta_bias)  # Q5.4
+    print("3 epoch finished")
+
+    # Time for breakpoint
+    Model = new_model()
+    # Model.fit(train_x, train_y, epoch=15)
+    # print(Model.loss_list)  # Q5.5
+    # print(Model.accuracy_list)  # Q5.6
+    Model.plot_loss(15, train_x, train_y, test_x, test_y, "result/15.png")
+    print("15 epoch finished")
+    """
+    # 100 epochs
+    Model = new_model()
+    Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/100.png")
