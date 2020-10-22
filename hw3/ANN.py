@@ -57,10 +57,10 @@ class ANN:
         self.loss_list = []
         self.accuracy = 0
         self.accuracy_list = []
-        self.alpha = np.random.rand(self.D, self.M)
-        self.alpha_bias = np.random.rand(self.D, 1)
-        self.beta = np.random.rand(self.K, self.D)
-        self.beta_bias = np.random.rand(self.K, 1)
+        self.alpha = np.random.standard_normal((self.D, self.M))
+        self.alpha_bias = np.random.standard_normal((self.D, 1))
+        self.beta = np.random.standard_normal((self.K, self.D))
+        self.beta_bias = np.random.standard_normal((self.K, 1))
         self.learning_rate = learning_rate
         self.reg = regularization
 
@@ -204,19 +204,17 @@ if __name__ == "__main__":
     # Model = new_model()
     # Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/100.png")
 
-    Model = ANN(784, 256, 10, learning_rate=0.01)
-    Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/random.png")
+    Model = ANN(784, 100, 10, learning_rate=0.01)
+    Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/D100.png")
 
-    Model = ANN(784, 256, 10, learning_rate=0.01)
-    Model.alpha = np.ones((Model.D, Model.M))
-    Model.alpha_bias = np.ones((Model.D, 1))
-    Model.beta = np.ones((Model.K, Model.D))
-    Model.beta_bias = np.ones((Model.K, 1))
-    Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/one.png")
+    Model = ANN(784, 512, 10, learning_rate=0.01)
+    Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/D512.png")
 
+    """
     Model = ANN(784, 256, 10, learning_rate=0.01)
-    Model.alpha = np.zeros((Model.D, Model.M))
-    Model.alpha_bias = np.zeros((Model.D, 1))
-    Model.beta = np.zeros((Model.K, Model.D))
-    Model.beta_bias = np.zeros((Model.K, 1))
-    Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/zero.png")
+    Model.alpha = np.random.uniform(-1, 1, (Model.D, Model.M))
+    Model.alpha_bias = np.random.uniform(-1, 1, (Model.D, 1))
+    Model.beta = np.random.uniform(-1, 1, (Model.K, Model.D))
+    Model.beta_bias = np.random.uniform(-1, 1, (Model.K, 1))
+    Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/uniform.png")
+    """
