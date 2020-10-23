@@ -105,7 +105,7 @@ class ANN:
                 y = train_y[i]
                 self.forward(x, y)
                 self.backward()
-            self.accuracy = self.compare(train_y, self.predict(train_x))
+            self.accuracy = self.compare(self.predict(train_x), train_y)
             self.accuracy_list.append(self.accuracy)
             self.loss_list.append(self.xeloss_mult(self.predict(train_x), train_y))
 
@@ -121,7 +121,7 @@ class ANN:
         return np.array(res)
 
     @staticmethod
-    def compare(y, y_pred):
+    def compare(y_pred, y):
         cnt = 0
         y1 = np.argmax(y, axis=1)
         y2 = np.argmax(y_pred, axis=1)
@@ -145,10 +145,12 @@ class ANN:
                 loss_total += self.loss
             train_pred = self.predict(train_x)
             test_pred = self.predict(test_x)
+            self.loss_list.append(self.xeloss_mult(train_pred, train_y))
             train_loss.append(self.xeloss_mult(train_pred, train_y))
             test_loss.append(self.xeloss_mult(test_pred, test_y))
-            train_accuracy.append(self.compare(train_y, train_pred))
-            test_accuracy.append(self.compare(test_y, test_pred))
+            self.accuracy_list.append(self.compare(test_pred, test_y))
+            train_accuracy.append(self.compare(train_pred, train_y))
+            test_accuracy.append(self.compare(test_pred, test_y))
             print("Epoch {} finished".format(e + 1))
         plt.figure()
         plt.plot([i + 1 for i in range(epoch)], train_loss, label="Training Loss")
@@ -166,7 +168,6 @@ if __name__ == "__main__":
     train_x, train_y = read_data("data/train.csv")
     test_x, test_y = read_data("data/test.csv")
 
-
     def new_model():
         # Initialize model
         Model = ANN(784, 256, 10, learning_rate=0.01)
@@ -178,8 +179,6 @@ if __name__ == "__main__":
         Model.beta_bias = read_params("params/beta2.txt")
         return Model
 
-
-    """
     Model = new_model()
     Model.fit([train_x[0]], [train_y[0]], epoch=1)
     print(Model.a[9])  # Q5.1, zero indexed so a[9] = a_{10}
@@ -194,23 +193,25 @@ if __name__ == "__main__":
 
     # Time for breakpoint
     Model = new_model()
-    # Model.fit(train_x, train_y, epoch=15)
-    # print(Model.loss_list)  # Q5.5
-    # print(Model.accuracy_list)  # Q5.6
-    Model.plot_loss(15, train_x, train_y, test_x, test_y, "result/15.png")
+    Model.fit(train_x, train_y, epoch=15)
+    print(Model.loss_list)  # Q5.5
+    print(Model.accuracy_list)  # Q5.6
     print("15 epoch finished")
-    
-    100 epochs
-    Model = new_model()
-    Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/100.png")
 
+    # 100 epochs
+    Model = new_model()
+    Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/100.png")  # Q5.7
+    print(Model.xeloss_mult(Model.predict(train_x), train_y))  # Q5.8.1
+    print(Model.compare(Model.predict(test_x), test_y))  # Q5.8.2
+
+    # Q5.9, three plots
     Model = ANN(784, 256, 10, learning_rate=0.01)
     Model.alpha = np.zeros((Model.D, Model.M))
     Model.alpha_bias = np.zeros((Model.D, 1))
     Model.beta = np.zeros((Model.K, Model.D))
     Model.beta_bias = np.zeros((Model.K, 1))
     Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/zero.png")
-    """
+
     Model = ANN(784, 256, 10, learning_rate=0.01)
     Model.alpha = np.random.uniform(0, 1, (Model.D, Model.M)) / (Model.D * (Model.M + 1))
     Model.alpha_bias = np.random.uniform(0, 1, (Model.D, 1)) / (Model.D * (Model.M + 1))
@@ -218,11 +219,9 @@ if __name__ == "__main__":
     Model.beta_bias = np.random.uniform(0, 1, (Model.K, 1)) / (Model.K * (Model.D + 1))
     Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/uniform.png")
 
-    """
     Model = ANN(784, 256, 10, learning_rate=0.01)
     Model.alpha = np.random.standard_normal((Model.D, Model.M))
     Model.alpha_bias = np.random.standard_normal((Model.D, 1))
     Model.beta = np.random.standard_normal((Model.K, Model.D))
     Model.beta_bias = np.random.standard_normal((Model.K, 1))
     Model.plot_loss(100, train_x, train_y, test_x, test_y, "result/normal.png")
-    """
