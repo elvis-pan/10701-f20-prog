@@ -31,7 +31,7 @@ class AdaBoost:
         self.weights = np.ones(train_y.shape[0])
         for k in range(iteration):
             model = DecisionStump()
-            model.fit(train_x, train_y)
+            model.fit(train_x, train_y, self.weights)
             train_y_pred = model.predict(train_x)
             err = np.sum(self.weights * np.abs(train_y - train_y_pred) / 2) / np.sum(self.weights)
             vote = np.log((1 - err) / err) / 2
