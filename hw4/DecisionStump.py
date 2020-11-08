@@ -21,7 +21,7 @@ class DecisionStump:
 
     def __init__(self):
         self.f = None
-        self.direction = None
+        self.description = None
         self.boundary = 0
         self.y_pred = None
         self.accuracy = 0
@@ -43,12 +43,13 @@ class DecisionStump:
             if err1 < lowest_err:
                 lowest_err = err1
                 self.boundary = bound
-                self.direction = "horizontal -1"  # horizontal axis < bound is classified as -1
+                self.description = "horizontal <{} -1".format(
+                    self.boundary)  # horizontal axis < bound is classified as -1
                 self.f = lambda x: (-1 if x[0] < self.boundary else 1)
             if err2 < lowest_err:
                 lowest_err = err2
                 self.boundary = bound
-                self.direction = "horizontal 1"
+                self.description = "horizontal <{} 1".format(self.boundary)
                 self.f = lambda x: (1 if x[0] < self.boundary else -1)
             # Vertical
             bound = v[i][0] if i < len(v) else float("inf")
@@ -59,11 +60,11 @@ class DecisionStump:
             if err1 < lowest_err:
                 lowest_err = err1
                 self.boundary = bound
-                self.direction = "vertical -1"
+                self.description = "vertical <{} -1".format(self.boundary)
                 self.f = lambda x: (-1 if x[1] < self.boundary else 1)
             if err2 < lowest_err:
                 lowest_err = err2
-                self.direction = "vertical 1"
+                self.description = "vertical <{} 1".format(self.boundary)
                 self.boundary = bound
                 self.f = lambda x: (1 if x[1] < self.boundary else -1)
         self.accuracy = 1 - lowest_err / len(train_y)
