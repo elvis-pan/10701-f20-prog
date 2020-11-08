@@ -5,7 +5,7 @@ Author: Elvis Pan
 
 Email: ypan2@andrew.cmu.edu
 
-## Homework 1
+## Homework 1 Na&iuml;ve Bayes
 A Na&iuml;ve Bayes classifier with both discrete and continuous attributes.
 
 Discrete attributes are modeled by categorical distribution with the proportion of each category of the attribute in the dataset. Continuous attributes are modeled by Gaussian distribution with the mean and variance of the attribute in the dataset.
@@ -32,7 +32,7 @@ NB.predict(data)
 print(NB.accuracy)
 ```
 
-## Homework 2
+## Homework 2 Linear Regression
 Linear Regression with stochastic gradient descent and support for L2, L1 regularization (ridge regression and lasso regression).
 
 In stochastic gradient descent, the gradient of the loss function is replaced by an estimate from a single datapoint.
@@ -63,10 +63,8 @@ y_pred = LR.predict(X)
 print(compute_loss(y_pred, y))
 ```
 
-## Homework 3
-Author: Elvis Pan
-
-Email: ypan2@andrew.cmu.edu
+## Homework 3 Artificial Neural Network
+The Artificial Neural Network model.
 
 ### Files
 
@@ -86,10 +84,8 @@ Model = ANN(M, D, K, learning_rate=0.01)
 Model.fit(train_x, train_y, epoch=100)
 print(Model.compare(Model.predict(train_x), train_y))
 ```
-## Homework 4 
-Author: Elvis Pan
-
-Email: ypan2@andrew.cmu.edu
+## Homework 4 AdaBoost
+The AdaBoost model with decision stump as weak classifier.
 
 ### Files
 
